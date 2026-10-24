@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NordTime</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <img src="../../icons/icon48.png" alt="" class="brand-logo" width="28" height="28">
+      <div>
+        <h1 class="brand-name">NordTime</h1>
+        <p class="brand-tag">Time zone follows your IP</p>
+      </div>
+    </div>
+    <label class="switch" title="Enable / disable NordTime">
+      <input type="checkbox" id="enabled" aria-label="Enable NordTime">
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+    </label>
+  </header>
+
+  <main>
+    <section class="hero card" id="hero">
+      <div class="hero-top">
+        <span class="pill" id="status"><span class="dot"></span><span id="statusText">Loading…</span></span>
+        <span class="chip" id="offset">UTC</span>
+      </div>
+      <div class="clock" id="clock">--:--<span class="clock-sec" id="clockSec">:--</span></div>
+      <div class="clock-date" id="clockDate">&nbsp;</div>
+      <div class="zone" id="zone">—</div>
+    </section>
+
+    <section class="card info">
+      <div class="row">
+        <span class="label">Location</span>
+        <span class="value"><span class="cc" id="cc">--</span><span id="location">—</span></span>
+      </div>
+      <div class="row">
+        <span class="label">Public IP</span>
+        <span class="value mono">
+          <span id="ip">—</span>
+          <button class="icon-btn" id="copyIp" title="Copy IP" aria-label="Copy IP address">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+          </button>
+        </span>
+      </div>
+      <div class="row">
+        <span class="label">Network</span>
+        <span class="value ellipsis" id="isp">—</span>
+      </div>
+      <div class="row">
+        <span class="label">System zone</span>
+        <span class="value" id="systemZone">—</span>
+      </div>
+      <div class="row">
+        <span class="label">Last check</span>
+        <span class="value" id="lastCheck">—</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="segmented" role="tablist" aria-label="Mode">
+        <button role="tab" data-mode="auto" id="modeAuto">Automatic (IP)</button>
+        <button role="tab" data-mode="manual" id="modeManual">Manual</button>
+      </div>
+      <div class="manual" id="manualBox" hidden>
+        <input id="manualTz" list="zones" placeholder="Search time zone, e.g. Europe/Berlin" autocomplete="off" spellcheck="false">
+        <datalist id="zones"></datalist>
+        <button class="btn btn-small" id="applyManual">Apply</button>
+      </div>
+      <p class="hint" id="modeHint">The time zone is detected from your current IP address and updates automatically when your VPN changes location.</p>
+    </section>
+
+    <details class="card settings">
+      <summary>Settings</summary>
+      <div class="row">
+        <label class="label" for="interval">Check IP every</label>
+        <select id="interval">
+          <option value="0.5">30 seconds</option>
+          <option value="1">1 minute</option>
+          <option value="5">5 minutes</option>
+          <option value="15">15 minutes</option>
+          <option value="60">1 hour</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="label" for="notify">Notify on change</label>
+        <label class="switch switch-sm">
+          <input type="checkbox" id="notify">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </label>
+      </div>
+    </details>
+
+    <p class="error" id="error" hidden></p>
+  </main>
+
+  <footer class="footer">
+    <button class="btn btn-primary" id="refresh">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      Re-check IP
+    </button>
+    <button class="btn" id="reloadTab" title="Reload the current tab">Reload tab</button>
+  </footer>
+  <div class="version" id="version"></div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

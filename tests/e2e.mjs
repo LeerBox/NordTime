@@ -64,13 +64,21 @@ try {
   });
   console.log(`    IP ${auto.geo?.ip} → ${auto.geo?.city}, ${auto.geo?.country} (${auto.geo?.countryCode}) via ${auto.geo?.provider}`);
   console.log(`    detected zone: ${auto.active.tz}   system zone: ${SYSTEM_TZ}`);
-  check('lookup succeeded', auto.status.state, 'ok');
-  check('active zone published', auto.active.enabled && typeof auto.active.tz === 'string', true);
 
   const page = await context.newPage();
   await page.goto(origin);
-  await page.waitForFunction((tz) => Intl.DateTimeFormat().resolvedOptions().timeZone === tz, auto.active.tz, { timeout: 5000 }).catch(() => {});
-  check('page reports IP-based zone', await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone), auto.active.tz);
+
+  // The live lookup depends on third-party APIs that may rate-limit shared CI
+  // runners; LIVE_LOOKUP_OPTIONAL=1 turns a failure into a warning there. The
+  // simulated VPN switch below still covers the automatic flow end to end.
+  if (auto.status.state !== 'ok' && process.env.LIVE_LOOKUP_OPTIONAL) {
+    console.log(`  ⚠ live lookup unavailable, skipped: ${auto.status.message}`);
+  } else {
+    check('lookup succeeded', auto.status.state, 'ok');
+    check('active zone published', auto.active.enabled && typeof auto.active.tz === 'string', true);
+    await page.waitForFunction((tz) => Intl.DateTimeFormat().resolvedOptions().timeZone === tz, auto.active.tz, { timeout: 5000 }).catch(() => {});
+    check('page reports IP-based zone', await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone), auto.active.tz);
+  }
 
   // --- Popup ----------------------------------------------------------------------
   const popup = await context.newPage();

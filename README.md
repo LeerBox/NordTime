@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/LeerBox/NordTime/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/LeerBox/NordTime/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-5E81AC">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-A3BE8C">
   <img alt="No tracking" src="https://img.shields.io/badge/tracking-none-88C0D0">
@@ -115,6 +116,17 @@ The end-to-end suite (`tests/e2e.mjs`) loads the unpacked extension and checks:
 - more than 20 time zone behaviors each for `Asia/Tokyo` and `America/New_York` (including DST);
 - live switching, and the disabled state;
 - a simulated VPN server change (mocked IP that resolves to Tokyo).
+
+### Continuous integration and releases
+
+[GitHub Actions](.github/workflows/ci.yml) runs the end-to-end suite on every push and pull request. To
+publish a release, bump `version` in `manifest.json`, commit, then push a matching tag. The workflow runs
+the tests, builds the ZIP and attaches it to a GitHub release:
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
 
 ### Project layout
 

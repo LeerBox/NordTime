@@ -63,22 +63,22 @@ and follows automatically.
 
 ```mermaid
 flowchart LR
-    T(["🔔 Trigger<br/><sub>startup · alarm · network change · popup</sub>"])
+    T(["🔔 Startup · Alarm<br/>Network change<br/>Popup"])
 
-    subgraph BG["⚙️ Background service worker"]
+    subgraph BG["⚙️ Background worker"]
         direction TB
-        IP["① Get public IP<br/><sub>ipify · Cloudflare · icanhazip</sub>"]
-        GEO["② Resolve time zone<br/><sub>ipwho.is · geojs.io · ipapi.co · freeipapi</sub>"]
-        PUB["③ Publish active zone"]
+        IP["① Get public IP"]
+        GEO["② Resolve time zone"]
+        PUB["③ Publish zone"]
         IP --> GEO --> PUB
     end
 
     subgraph PAGE["🖥️ Every web page"]
         direction TB
-        RELAY["relay.js<br/><sub>isolated world</sub>"]
-        INJECT["④ inject.js<br/><sub>page world</sub>"]
-        API["🕒 Date · Intl · Temporal · iframes"]
-        RELAY -- "sync at document_start" --> INJECT --> API
+        RELAY["relay.js<br/>isolated world"]
+        INJECT["④ inject.js<br/>page world"]
+        API["🕒 Date · Intl<br/>Temporal · iframes"]
+        RELAY -- "sync" --> INJECT --> API
     end
 
     T --> BG
@@ -94,8 +94,8 @@ flowchart LR
 
 | Step | What happens |
 | :---: | --- |
-| **① Detect** | The service worker gets the public IP. The request goes through the browser, so it shows the VPN exit IP, whether the VPN runs as a system app or as a browser proxy extension. |
-| **② Resolve** | The IP is turned into an IANA time zone, with four providers as fallbacks. The location is looked up again only when the IP changes, or every 6 hours. |
+| **① Detect** | The service worker gets the public IP from ipify, Cloudflare or icanhazip. The request goes through the browser, so it shows the VPN exit IP, whether the VPN runs as a system app or as a browser proxy extension. |
+| **② Resolve** | The IP is turned into an IANA time zone by ipwho.is, geojs.io, ipapi.co or freeipapi.com, each one a fallback for the one before. The location is looked up again only when the IP changes, or every 6 hours. |
 | **③ Deliver** | `chrome.storage` is asynchronous and would lose the race against inline page scripts. Instead, NordTime registers its content scripts with a few one-line files (`src/content/zone/bitN.js`) that encode the zone's index in `Intl.supportedValuesOf('timeZone')`. The relay therefore knows the zone **synchronously** at `document_start`. |
 | **④ Spoof** | `inject.js` runs in the page's main world. It calculates wall-clock time in the target zone with `Intl.DateTimeFormat#formatToParts` and caches the results. All hooks fall back to native behavior when NordTime is disabled. |
 

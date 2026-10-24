@@ -61,33 +61,50 @@ and follows automatically.
 
 ## How it works
 
-```
-┌──────────────────────┐  public IP   ┌──────────────────────────┐
-│  Background worker   │─────────────▶│ ipify / Cloudflare /     │
-│  (src/background.js) │◀─────────────│ icanhazip                │
-│                      │  IP → zone   ├──────────────────────────┤
-│  alarms · network    │─────────────▶│ ipwho.is / geojs.io /    │
-│  change · popup      │◀─────────────│ ipapi.co / freeipapi.com │
-└─────────┬────────────┘              └──────────────────────────┘
-          │ registers content scripts + chrome.storage "active"
-          ▼
-┌──────────────────────┐   private DOM event   ┌──────────────────────────┐
-│ relay.js (isolated)  │──────────────────────▶│ inject.js (page / MAIN)  │
-│ knows the zone       │   synchronous at      │ patches Date, Intl,      │
-│ synchronously        │   document_start      │ Temporal, iframes        │
-└──────────────────────┘                       └──────────────────────────┘
+```mermaid
+flowchart TB
+    T(["🔔 Startup · Alarm · Network change · Popup"])
+
+    subgraph BG["⚙️ Background service worker"]
+        IP["① Get public IP"]
+        GEO["② Resolve IP → time zone"]
+        PUB["③ Publish active zone"]
+    end
+
+    S1[("🌐 ipify · Cloudflare · icanhazip")]
+    S2[("📍 ipwho.is · geojs.io · ipapi.co · freeipapi.com")]
+
+    subgraph PAGE["🖥️ Every web page"]
+        RELAY["relay.js<br/><sub>isolated world</sub>"]
+        INJECT["inject.js<br/><sub>page world</sub>"]
+        API["🕒 Date · Intl · Temporal · iframes"]
+    end
+
+    T --> IP
+    IP <-.-> S1
+    IP --> GEO
+    GEO <-.-> S2
+    GEO --> PUB
+    PUB -- "content scripts + storage" --> RELAY
+    RELAY -- "sync at document_start" --> INJECT
+    INJECT -- "patched" --> API
+
+    classDef step fill:#5E81AC,stroke:#81A1C1,color:#ECEFF4
+    classDef page fill:#3B4252,stroke:#88C0D0,color:#ECEFF4
+    classDef ext fill:#4C566A,stroke:#D8DEE9,color:#ECEFF4
+    classDef trigger fill:#A3BE8C,stroke:#8FBCBB,color:#2E3440
+    class IP,GEO,PUB step
+    class RELAY,INJECT,API page
+    class S1,S2 ext
+    class T trigger
 ```
 
-1. **Detection.** The service worker gets the public IP. Because the request goes through the browser, it
-   shows the VPN exit IP, whether the VPN runs as a system app or as a browser proxy extension. The location
-   lookup is repeated only when the IP changes, or every 6 hours.
-2. **Delivery before page scripts.** `chrome.storage` is asynchronous, so on its own it would lose the race
-   against inline page scripts. To avoid that, NordTime registers its content scripts dynamically and
-   prepends a few one-line files (`src/content/zone/bitN.js`). Together these encode the zone's index in
-   `Intl.supportedValuesOf('timeZone')`, so the relay knows the zone synchronously at `document_start`.
-3. **Spoofing.** `inject.js` runs in the page's main world and calculates wall-clock time in the target zone
-   with `Intl.DateTimeFormat#formatToParts`, caching the results. All hooks fall back to the native behavior
-   when NordTime is disabled.
+| Step | What happens |
+| :---: | --- |
+| **① Detect** | The service worker gets the public IP. The request goes through the browser, so it shows the VPN exit IP, whether the VPN runs as a system app or as a browser proxy extension. |
+| **② Resolve** | The IP is turned into an IANA time zone, with four providers as fallbacks. The location is looked up again only when the IP changes, or every 6 hours. |
+| **③ Deliver** | `chrome.storage` is asynchronous and would lose the race against inline page scripts. Instead, NordTime registers its content scripts with a few one-line files (`src/content/zone/bitN.js`) that encode the zone's index in `Intl.supportedValuesOf('timeZone')`. The relay therefore knows the zone **synchronously** at `document_start`. |
+| **④ Spoof** | `inject.js` runs in the page's main world. It calculates wall-clock time in the target zone with `Intl.DateTimeFormat#formatToParts` and caches the results. All hooks fall back to native behavior when NordTime is disabled. |
 
 ## Privacy
 

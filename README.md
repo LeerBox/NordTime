@@ -62,40 +62,33 @@ and follows automatically.
 ## How it works
 
 ```mermaid
-flowchart TB
-    T(["🔔 Startup · Alarm · Network change · Popup"])
+flowchart LR
+    T(["🔔 Trigger<br/><sub>startup · alarm · network change · popup</sub>"])
 
     subgraph BG["⚙️ Background service worker"]
-        IP["① Get public IP"]
-        GEO["② Resolve IP → time zone"]
+        direction TB
+        IP["① Get public IP<br/><sub>ipify · Cloudflare · icanhazip</sub>"]
+        GEO["② Resolve time zone<br/><sub>ipwho.is · geojs.io · ipapi.co · freeipapi</sub>"]
         PUB["③ Publish active zone"]
+        IP --> GEO --> PUB
     end
-
-    S1[("🌐 ipify · Cloudflare · icanhazip")]
-    S2[("📍 ipwho.is · geojs.io · ipapi.co · freeipapi.com")]
 
     subgraph PAGE["🖥️ Every web page"]
+        direction TB
         RELAY["relay.js<br/><sub>isolated world</sub>"]
-        INJECT["inject.js<br/><sub>page world</sub>"]
+        INJECT["④ inject.js<br/><sub>page world</sub>"]
         API["🕒 Date · Intl · Temporal · iframes"]
+        RELAY -- "sync at document_start" --> INJECT --> API
     end
 
-    T --> IP
-    IP <-.-> S1
-    IP --> GEO
-    GEO <-.-> S2
-    GEO --> PUB
-    PUB -- "content scripts + storage" --> RELAY
-    RELAY -- "sync at document_start" --> INJECT
-    INJECT -- "patched" --> API
+    T --> BG
+    BG -- "content scripts<br/>+ storage" --> PAGE
 
     classDef step fill:#5E81AC,stroke:#81A1C1,color:#ECEFF4
-    classDef page fill:#3B4252,stroke:#88C0D0,color:#ECEFF4
-    classDef ext fill:#4C566A,stroke:#D8DEE9,color:#ECEFF4
+    classDef page fill:#434C5E,stroke:#88C0D0,color:#ECEFF4
     classDef trigger fill:#A3BE8C,stroke:#8FBCBB,color:#2E3440
     class IP,GEO,PUB step
     class RELAY,INJECT,API page
-    class S1,S2 ext
     class T trigger
 ```
 

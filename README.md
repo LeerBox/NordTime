@@ -79,6 +79,7 @@ and follows automatically.
 - The only network requests it makes are the IP and geolocation lookups listed above. They are sent without
   cookies or a referrer.
 - Everything it stores (settings, last location) stays in `chrome.storage.local` on your device.
+- Full details: [Privacy Policy](PRIVACY.md).
 
 ### Permissions
 
